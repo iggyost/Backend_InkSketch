@@ -15,11 +15,15 @@ public partial class InkSketchDbContext : DbContext
     {
     }
 
+    public virtual DbSet<Category> Categories { get; set; }
+
     public virtual DbSet<FavoritesImage> FavoritesImages { get; set; }
 
     public virtual DbSet<FavoritesView> FavoritesViews { get; set; }
 
     public virtual DbSet<Image> Images { get; set; }
+
+    public virtual DbSet<ImagesCategory> ImagesCategories { get; set; }
 
     public virtual DbSet<ImagesTag> ImagesTags { get; set; }
 
@@ -33,14 +37,24 @@ public partial class InkSketchDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<UsersCategory> UsersCategories { get; set; }
+
     public virtual DbSet<UsersTag> UsersTags { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=IgorPc\\SQLEXPRESS; Database=InkSketchDb; Trusted_Connection=True; TrustServerCertificate=True");
+        => optionsBuilder.UseSqlServer("Server=IgorPc\\SQLEXPRESS; Database=InkSketchDb; Trusted_Connection=True; TrustServerCertificate=True; MultipleActiveResultSets=true");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Category>(entity =>
+        {
+            entity.Property(e => e.CategoryId).HasColumnName("category_id");
+            entity.Property(e => e.Name)
+                .HasMaxLength(50)
+                .HasColumnName("name");
+        });
+
         modelBuilder.Entity<FavoritesImage>(entity =>
         {
             entity.HasKey(e => e.FavoriteImageId);
@@ -84,6 +98,25 @@ public partial class InkSketchDbContext : DbContext
                 .HasConstraintName("FK_Images_Users");
         });
 
+        modelBuilder.Entity<ImagesCategory>(entity =>
+        {
+            entity.HasKey(e => e.ImageCategoryId);
+
+            entity.Property(e => e.ImageCategoryId).HasColumnName("image_category_id");
+            entity.Property(e => e.CategoryId).HasColumnName("category_id");
+            entity.Property(e => e.ImageId).HasColumnName("image_id");
+
+            entity.HasOne(d => d.Category).WithMany(p => p.ImagesCategories)
+                .HasForeignKey(d => d.CategoryId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ImagesCategories_Categories");
+
+            entity.HasOne(d => d.Image).WithMany(p => p.ImagesCategories)
+                .HasForeignKey(d => d.ImageId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ImagesCategories_Images");
+        });
+
         modelBuilder.Entity<ImagesTag>(entity =>
         {
             entity.HasKey(e => e.ImageTagId);
@@ -109,6 +142,10 @@ public partial class InkSketchDbContext : DbContext
                 .HasNoKey()
                 .ToView("ImagesView");
 
+            entity.Property(e => e.Category)
+                .HasMaxLength(50)
+                .HasColumnName("category");
+            entity.Property(e => e.CategoryId).HasColumnName("category_id");
             entity.Property(e => e.HexColor)
                 .HasMaxLength(50)
                 .HasColumnName("hex_color");
@@ -180,6 +217,25 @@ public partial class InkSketchDbContext : DbContext
             entity.Property(e => e.RegistrationDate)
                 .HasColumnType("date")
                 .HasColumnName("registration_date");
+        });
+
+        modelBuilder.Entity<UsersCategory>(entity =>
+        {
+            entity.HasKey(e => e.UserCategoryId);
+
+            entity.Property(e => e.UserCategoryId).HasColumnName("user_category_id");
+            entity.Property(e => e.CategoryId).HasColumnName("category_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(d => d.Category).WithMany(p => p.UsersCategories)
+                .HasForeignKey(d => d.CategoryId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_UsersCategories_Categories");
+
+            entity.HasOne(d => d.User).WithMany(p => p.UsersCategories)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_UsersCategories_Users");
         });
 
         modelBuilder.Entity<UsersTag>(entity =>

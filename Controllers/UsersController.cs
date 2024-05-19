@@ -83,7 +83,7 @@ namespace Backend_InkSketch.Controllers
                 {
                     context.Users.Add(user);
                     context.SaveChanges();
-                    return Ok();
+                    return Ok(context.Users.Where(x => x.Phone == user.Phone).FirstOrDefault());
                 }
                 else
                 {

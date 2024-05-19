@@ -30,29 +30,87 @@ namespace Backend_InkSketch.Controllers
             }
         }
         [HttpGet]
-        [Route("get/rec/{userId}/{skipCount}")]
-        public async Task<IEnumerable<ImagesView>> GetRec(int userId, int skipCount)
+        [Route("get/random")]
+        public ActionResult<IEnumerable<ImagesView>> GetRandom()
+        {
+            try
+            {
+                List<ImagesView> randomImages = new List<ImagesView>();
+                var tagsList = context.Tags.ToList();
+                foreach (var item in tagsList)
+                {
+                    var imagesWithItemTag = context.ImagesViews.Where(x => x.TagId == item.TagId).ToList();
+                    Random random = new Random();
+                    var randomSelectedImage = imagesWithItemTag.ElementAt(random.Next(1,imagesWithItemTag.Count));
+                    randomImages.Add(randomSelectedImage);
+                }
+                return randomImages;
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ошибка сервера");
+            }
+        }
+        [HttpGet]
+        [Route("get/tag/{tagId}")]
+        public ActionResult<IEnumerable<ImagesView>> GetByTag(int tagId)
+        {
+            try
+            {
+                var selectedImages = context.ImagesViews.Where(x => x.TagId == tagId).ToList();
+                return selectedImages;
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ошибка сервера");
+            }
+        }
+        [HttpGet]
+        [Route("get/rec/{userId}/{skipCount}/{categoryId}")]
+        public async Task<IEnumerable<ImagesView>> GetRec(int userId, int skipCount, int categoryId)
         {
             try
             {
                 var enteredUser = context.Users.Where(x => x.UserId == userId).FirstOrDefault();
                 if (enteredUser != null)
                 {
-                    var userTags = context.UsersTags.Where(x => x.UserId == enteredUser.UserId).ToList();
-                    if (userTags.Count > 1)
+                    if (categoryId != 0)
                     {
-                        var data = await context.ImagesViews.Where(x => x.TagId == userTags.Select(x => x.TagId).FirstOrDefault()).Skip(skipCount/2).Take(2).ToListAsync();
-                        data.AddRange(await context.ImagesViews.Where(x => x.TagId == userTags.Select(x => x.TagId).LastOrDefault()).Skip(skipCount/2).Take(2).ToListAsync());
-                        return data;
-                    }
-                    else if (userTags.Count == 1)
-                    {
-                        var data = await context.ImagesViews.Where(x => x.TagId == userTags.Select(x => x.TagId).FirstOrDefault()).Skip(skipCount).Take(4).ToListAsync();
-                        return data;
+                        var userTags = context.UsersTags.Where(x => x.UserId == enteredUser.UserId).ToList();
+                        if (userTags.Count > 1)
+                        {
+                            var data = await context.ImagesViews.Where(x => x.CategoryId == categoryId && x.TagId == userTags.Select(x => x.TagId).FirstOrDefault()).Skip(skipCount / 2).Take(2).ToListAsync();
+                            data.AddRange(await context.ImagesViews.Where(x => x.CategoryId == categoryId && x.TagId == userTags.Select(x => x.TagId).LastOrDefault()).Skip(skipCount / 2).Take(2).ToListAsync());
+                            return data;
+                        }
+                        else if (userTags.Count == 1)
+                        {
+                            var data = await context.ImagesViews.Where(x => x.TagId == userTags.Select(x => x.TagId).FirstOrDefault()).Skip(skipCount).Take(4).ToListAsync();
+                            return data;
+                        }
+                        else
+                        {
+                            return null;
+                        }
                     }
                     else
                     {
-                        return null;
+                        var userTags = context.UsersTags.Where(x => x.UserId == enteredUser.UserId).ToList();
+                        if (userTags.Count > 1)
+                        {
+                            var data = await context.ImagesViews.Where(x => x.TagId == userTags.Select(x => x.TagId).FirstOrDefault()).Skip(skipCount / 2).Take(2).ToListAsync();
+                            data.AddRange(await context.ImagesViews.Where(x => x.TagId == userTags.Select(x => x.TagId).LastOrDefault()).Skip(skipCount / 2).Take(2).ToListAsync());
+                            return data;
+                        }
+                        else if (userTags.Count == 1)
+                        {
+                            var data = await context.ImagesViews.Where(x => x.TagId == userTags.Select(x => x.TagId).FirstOrDefault()).Skip(skipCount).Take(4).ToListAsync();
+                            return data;
+                        }
+                        else
+                        {
+                            return null;
+                        }
                     }
                 }
                 else

@@ -21,5 +21,7 @@ public partial class User
 
     public virtual ICollection<Image> Images { get; } = new List<Image>();
 
+    public virtual ICollection<UsersCategory> UsersCategories { get; } = new List<UsersCategory>();
+
     public virtual ICollection<UsersTag> UsersTags { get; } = new List<UsersTag>();
 }

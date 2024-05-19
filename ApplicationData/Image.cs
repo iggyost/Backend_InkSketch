@@ -13,6 +13,8 @@ public partial class Image
 
     public virtual ICollection<FavoritesImage> FavoritesImages { get; } = new List<FavoritesImage>();
 
+    public virtual ICollection<ImagesCategory> ImagesCategories { get; } = new List<ImagesCategory>();
+
     public virtual ICollection<ImagesTag> ImagesTags { get; } = new List<ImagesTag>();
 
     public virtual User User { get; set; } = null!;
